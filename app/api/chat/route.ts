@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { brand, cars, DRIVE_TIMES, TZ, getCar, usd, carName, finance, tradeIn, APR } from "@/lib/data";
 import { fallback, detectLang, busy } from "@/lib/fallback";
-import { groq, Busy, CONFIRM_RE, dayList } from "@/lib/groq";
+import { groq, Busy, CONFIRM_RE, dayList, weekday } from "@/lib/groq";
 import { availability, createDrive, SlotTaken, upsertLead, saveFinance, type Drive } from "@/lib/store";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   const last = [...messages].reverse().find((m) => m.role === "user")?.content || "";
   const key = process.env.GROQ_API_KEY;
   let booking: Drive | undefined; let cardIds: string[] = [];
-  const card = () => booking && { ref: booking.ref, title: "Test drive confirmed", href: `/inventory/${booking.carId}`, lines: [["Car", booking.car.replace(/^\d{4} /, "")], ["When", `${booking.date} · ${booking.time}`], ["Driver", booking.name], ["Where", "Apex Motors, Biscayne Blvd"]] };
+  const card = () => booking && { ref: booking.ref, title: "Test drive confirmed", href: `/inventory/${booking.carId}`, lines: [["Car", booking.car.replace(/^\d{4} /, "")], ["When", `${weekday(booking.date).slice(0, 3)} ${booking.date} · ${booking.time}`], ["Driver", booking.name], ["Where", "Apex Motors, Biscayne Blvd"]] };
   const items = () => [...new Set(cardIds)].slice(0, 3).map((id) => { const c = getCar(id)!; return { id, title: `${c.make} ${c.model}`, sub: `${c.year} · ${c.trim} · ${c.miles.toLocaleString()} mi`, price: usd(c.price), href: `/inventory/${id}`, art: { hex: c.hex, body: c.body } }; });
   const out = (reply: string, source: string) => NextResponse.json({ reply, source, booking: card(), items: items() });
   if (key) {
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
                 else if (booking) result = { ok: true, ref: booking.ref };
                 else { booking = await createDrive({ ...a, source: channel }); cardIds = [];
                   await upsertLead(sessionId, { name: a.name, phone: a.phone, email: a.email, drives: [booking.ref], interested: [booking.carId] }, channel).catch(() => {});
-                  result = { ok: true, ref: booking.ref, testDrive: booking }; }
+                  result = { ok: true, ref: booking.ref, weekday: weekday(booking.date), testDrive: booking }; }
               } else result = { error: "unknown tool" };
             } catch (e: any) { result = e instanceof SlotTaken ? { ok: false, error: "slot_taken", message: "That slot was just taken. Check availability again and offer alternatives." } : { ok: false, error: e?.message || "failed" }; }
             convo.push({ role: "tool", tool_call_id: tc.id, content: JSON.stringify(result) });

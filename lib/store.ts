@@ -1,6 +1,6 @@
 import { putNew, readAll, keys, Exists, storageName } from "./kv";
 import { getCar, carName, DRIVE_TIMES, TZ } from "./data";
-import { normTime, ref } from "./groq";
+import { normTime, ref, weekday } from "./groq";
 export { storageName };
 export type Drive = { ref: string; carId: string; car: string; date: string; time: string; name: string; email?: string; phone?: string; notes?: string; source: "chat" | "voice" | "form"; createdAt: string };
 export type Lead = { id: string; name?: string; email?: string; phone?: string; budget?: number; bodyType?: string; interested?: string[]; financing?: string; creditTier?: string; monthlyTarget?: number; tradeIn?: string; tradeInValue?: string; timeline?: string; notes?: string; drives?: string[]; score: number; source: string; createdAt: string; updatedAt: string };
@@ -14,10 +14,10 @@ export async function availability(carId: string, date: string) {
   const c = getCar(carId); date = String(date || "").slice(0, 10);
   if (!c) return { error: "unknown car id" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "date must be YYYY-MM-DD" };
-  if (!isOpen(date)) return { carId: c.id, date, free: [], note: "Closed on Sundays" };
+  if (!isOpen(date)) return { carId: c.id, date, weekday: weekday(date), free: [], note: "Closed on Sundays" };
   if (date < today()) return { carId: c.id, date, free: [], note: "date is in the past" };
   const taken = new Set((await keys(D + date + "/")).map((k) => k.split("/").pop()!.replace(/\.json$/, "")));
-  return { carId: c.id, car: carName(c), date, free: DRIVE_TIMES.filter((t) => !taken.has(slot(c.id, t))) };
+  return { carId: c.id, car: carName(c), date, weekday: weekday(date), free: DRIVE_TIMES.filter((t) => !taken.has(slot(c.id, t))) };
 }
 export async function createDrive(i: Partial<Drive>): Promise<Drive> {
   const c = getCar(i.carId || ""); const date = String(i.date || "").slice(0, 10); const time = normTime(i.time || "", DRIVE_TIMES);
