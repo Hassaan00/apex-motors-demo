@@ -1,6 +1,6 @@
 import { putNew, readAll, keys, Exists, storageName } from "./kv";
 import { getCar, carName, DRIVE_TIMES, TZ } from "./data";
-import { normTime, ref, weekday } from "./groq";
+import { normTime, ref, weekday, resolveDate } from "./groq";
 export { storageName };
 export type Drive = { ref: string; carId: string; car: string; date: string; time: string; name: string; email?: string; phone?: string; notes?: string; source: "chat" | "voice" | "form"; createdAt: string };
 export type Lead = { id: string; name?: string; email?: string; phone?: string; budget?: number; bodyType?: string; interested?: string[]; financing?: string; creditTier?: string; monthlyTarget?: number; tradeIn?: string; tradeInValue?: string; timeline?: string; notes?: string; drives?: string[]; score: number; source: string; createdAt: string; updatedAt: string };
@@ -11,7 +11,7 @@ export const today = () => new Date().toLocaleDateString("en-CA", { timeZone: TZ
 const isOpen = (d: string) => new Date(d + "T12:00:00Z").getUTCDay() !== 0;
 export class SlotTaken extends Error {}
 export async function availability(carId: string, date: string) {
-  const c = getCar(carId); date = String(date || "").slice(0, 10);
+  const c = getCar(carId); date = resolveDate(date, TZ);
   if (!c) return { error: "unknown car id" };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: "date must be YYYY-MM-DD" };
   if (!isOpen(date)) return { carId: c.id, date, weekday: weekday(date), free: [], note: "Closed on Sundays" };
@@ -20,7 +20,7 @@ export async function availability(carId: string, date: string) {
   return { carId: c.id, car: carName(c), date, weekday: weekday(date), free: DRIVE_TIMES.filter((t) => !taken.has(slot(c.id, t))) };
 }
 export async function createDrive(i: Partial<Drive>): Promise<Drive> {
-  const c = getCar(i.carId || ""); const date = String(i.date || "").slice(0, 10); const time = normTime(i.time || "", DRIVE_TIMES);
+  const c = getCar(i.carId || ""); const date = resolveDate(i.date || "", TZ); const time = normTime(i.time || "", DRIVE_TIMES);
   if (!c || !time || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today() || !isOpen(date)) throw new Error("Invalid car, date or time (closed Sundays). Valid times: " + DRIVE_TIMES.join(", "));
   if (!i.name || !(i.email || i.phone)) throw new Error("Name and phone or email are required");
   const d: Drive = { ref: ref("APX"), carId: c.id, car: carName(c), date, time, name: String(i.name).slice(0, 80), email: i.email?.slice(0, 120), phone: i.phone?.slice(0, 40), notes: i.notes?.slice(0, 400), source: i.source || "form", createdAt: new Date().toISOString() };
