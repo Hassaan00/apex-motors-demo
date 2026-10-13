@@ -54,14 +54,14 @@ export async function POST(req: Request) {
             try {
               const n = tc.function.name;
               if (n === "search_inventory") { const r = search(a); cardIds = r.map((c) => c.id); result = { count: r.length, results: r.map((c) => ({ id: c.id, name: carName(c), price: usd(c.price), miles: c.miles, color: c.color, hp: c.hp, zero60: c.zero60, condition: c.condition, features: c.features.join(", ") })), note: r.length ? undefined : "No exact match; suggest the closest cars from inventory." };
-                if (sessionId && r.length) upsertLead(sessionId, { interested: r.map((c) => c.id) }, channel).catch(() => {}); }
+                if (sessionId && r.length) await upsertLead(sessionId, { interested: r.map((c) => c.id) }, channel).catch(() => {}); }
               else if (n === "check_availability") result = await availability(a.carId, a.date);
               else if (n === "estimate_finance") { const c = getCar(a.carId); if (!c) throw new Error("unknown car"); const months = a.months || 60; const down = a.down ?? Math.round(c.price * 0.2); const tier = a.credit || "good";
                 const f = finance(c.price, down, months, tier, a.tradeInValue || 0); result = { car: carName(c), price: c.price, down, months, credit: tier, ...f, note: "Estimate incl. ~7% tax & fees, subject to credit approval" };
-                saveFinance({ carId: c.id, car: carName(c), price: c.price, down, months, tier, tradeIn: a.tradeInValue, monthly: f.monthly, apr: f.apr, source: channel }).catch(() => {});
-                if (sessionId) upsertLead(sessionId, { financing: "finance", creditTier: tier, interested: [c.id] }, channel).catch(() => {}); }
+                await saveFinance({ carId: c.id, car: carName(c), price: c.price, down, months, tier, tradeIn: a.tradeInValue, monthly: f.monthly, apr: f.apr, source: channel }).catch(() => {});
+                if (sessionId) await upsertLead(sessionId, { financing: "finance", creditTier: tier, interested: [c.id] }, channel).catch(() => {}); }
               else if (n === "estimate_trade_in") { const r = tradeIn(a.make, a.model, a.year, a.miles, a.condition); result = { ...r, note: "Instant estimate, final offer after a 20-minute inspection" };
-                if (sessionId) upsertLead(sessionId, { tradeIn: `${a.year} ${a.make} ${a.model}, ${a.miles} mi`, tradeInValue: `${usd(r.low)}–${usd(r.high)}` }, channel).catch(() => {}); }
+                if (sessionId) await upsertLead(sessionId, { tradeIn: `${a.year} ${a.make} ${a.model}, ${a.miles} mi`, tradeInValue: `${usd(r.low)}–${usd(r.high)}` }, channel).catch(() => {}); }
               else if (n === "save_lead") { const l = await upsertLead(sessionId, a, channel); result = { ok: true, score: l.score }; }
               else if (n === "create_test_drive") {
                 if (!confirmed) { pending = a; result = { ok: false, error: "needs_confirmation", message: "Not booked yet. Summarise and ask the user to confirm first." }; }
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
         if (reply && !booking && !corrected && /\b(confirmed|booked|is set|reserved|all set)\b|confirmad|bestätigt|gebucht|confirmé|réservé/i.test(reply) && !/\?\s*$/.test(reply)) {
           corrected = true; convo.push({ role: "assistant", content: reply }, { role: "system", content: "Correction: nothing is booked yet (create_test_drive has not succeeded). Do not claim a booking. Continue: check availability, collect full name and phone/email, summarise and ask the user to confirm." }); continue;
         }
-        if (reply && !booking && corrected && /\b(confirmed|booked|reserved|all set)\b/i.test(reply) && !/\?\s*$/.test(reply)) return out("Almost there. Please confirm your full name, phone or email, and the day and time, and I'll lock it in.", "groq");
+        if (reply && !booking && corrected && /\b(confirmed|booked|reserved|all set)\b/i.test(reply) && !/\?\s*$/.test(reply)) return out("Perfect, I have everything I need. Shall I go ahead and lock in this test drive for you?", "groq");
         if (reply) return out(reply, "groq");
         break;
       }
