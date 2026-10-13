@@ -1,0 +1,18 @@
+@tailwind base; @tailwind components; @tailwind utilities;
+:root { color-scheme: dark; }
+html { scroll-behavior: smooth; }
+html, body { overflow-x: clip; }
+body { @apply bg-carbon-950 text-carbon-50 antialiased; }
+.container-x { @apply mx-auto w-full max-w-7xl px-5 sm:px-8; }
+.btn-volt { @apply inline-flex items-center justify-center gap-2 rounded-md bg-volt-500 px-6 py-3.5 text-[13px] font-bold uppercase tracking-[.14em] text-white shadow-[0_14px_40px_-12px_rgba(255,59,31,.7)] transition hover:bg-volt-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-volt-400; }
+.btn-dark { @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/[.04] px-6 py-3.5 text-[13px] font-bold uppercase tracking-[.14em] text-white transition hover:border-white/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-volt-400; }
+.kicker { @apply inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[.3em] text-volt-400; }
+.kicker::before { content: ""; @apply h-2 w-2 rotate-45 bg-volt-500; }
+.h2 { @apply font-display text-4xl font-bold uppercase italic leading-[.95] tracking-tight text-white sm:text-6xl; }
+.field { @apply w-full rounded-md border border-white/10 bg-white/[.05] px-3.5 py-2.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-volt-500; }
+.field option { @apply bg-carbon-900; }
+.speed { background-image: repeating-linear-gradient(100deg, transparent 0 22px, rgba(255,255,255,.025) 22px 23px); }
+.grid-floor { background-image: linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px); background-size: 60px 60px; transform: perspective(500px) rotateX(60deg); transform-origin: top; mask-image: linear-gradient(to bottom, black, transparent 80%); }
+.cut { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%); }
+::selection { @apply bg-volt-500 text-white; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
