@@ -34,7 +34,7 @@ export default function Page({ params }: { params: { id: string } }) {
         <h2 className="mt-12 font-display text-3xl font-black uppercase italic text-white">Highlights</h2>
         <ul className="mt-5 grid gap-3 sm:grid-cols-2">{[...c.features, "172-point inspection passed", "Clean history report"].map((f) => <li key={f} className="flex items-center gap-3 text-white/75"><Check size={16} className="text-volt-500" />{f}</li>)}</ul>
         <h2 className="mt-14 font-display text-3xl font-black uppercase italic text-white">Finance this car</h2><div className="mt-5"><FinanceCalc carId={c.id} fixed /></div>
-        <h2 className="mt-14 font-display text-3xl font-black uppercase italic text-white">Value your trade-in</h2><div className="mt-5"><TradeIn /></div>
+        <h2 className="mt-14 font-display text-3xl font-black uppercase italic text-white">Value your trade-in</h2><div className="mt-5"><TradeIn compact /></div>
       </div>
       <aside className="lg:sticky lg:top-24 lg:self-start">
         <div className="cut border border-white/10 bg-carbon-900 p-6">

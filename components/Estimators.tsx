@@ -31,11 +31,11 @@ export function FinanceCalc({ carId: c0 = cars[0].id, fixed = false }: { carId?:
     </div>
   );
 }
-export function TradeIn() {
+export function TradeIn({ compact = false }: { compact?: boolean }) {
   const [make, setMake] = useState("BMW"); const [model, setModel] = useState("X3"); const [year, setYear] = useState(2020); const [miles, setMiles] = useState(42000); const [cond, setCond] = useState("good");
   const v = tradeIn(make, model, year, miles, cond);
   return (
-    <div className="cut grid gap-6 border border-white/10 bg-carbon-900 p-6 sm:p-8 md:grid-cols-2">
+    <div className={`cut grid gap-6 border border-white/10 bg-carbon-900 p-6 sm:p-8 ${compact ? "" : "md:grid-cols-2"}`}>
       <div className="grid grid-cols-2 gap-3">
         <label className="text-sm text-white/55">Make<input value={make} onChange={(e) => setMake(e.target.value)} className="field mt-1.5" /></label>
         <label className="text-sm text-white/55">Model<input value={model} onChange={(e) => setModel(e.target.value)} className="field mt-1.5" /></label>
